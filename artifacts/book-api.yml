@@ -1,0 +1,276 @@
+---
+openapi: "3.0.0"
+info:
+  version: 0.0.1
+  title: Book-API
+  description: Book-API
+
+components:
+  schemas:
+    BaseBook:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        no_of_pages:
+          type: integer
+        year:
+          type: integer
+      required:
+        - title
+        - description
+    Book:
+      allOf:
+        - $ref: '#/components/schemas/BaseBook'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+    ListBooks:
+      type: array
+      items:
+        $ref: '#/components/schemas/BaseBook'
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        details:
+          type: string
+
+paths:
+  /books:
+    get:
+      summary: List books
+      operationId: getBooks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListBooks'
+        500:
+          description: INTERNAL_SERVER_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        uri: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:book-find-all-lambda/invocations'
+        httpMethod: POST #must be post
+        type: aws_proxy
+      x-amazon-apigateway-request-validator: 'params-only'
+    post:
+      summary: Create book
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaseBook'
+      responses:
+        201:
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        500:
+          description: INTERNAL_SERVER_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        uri: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:book-create-lambda/invocations'
+        httpMethod: POST #must be post
+        type: aws_proxy
+      x-amazon-apigateway-request-validator: 'all'
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      tags:
+      - CORS
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+              method.response.header.Access-Control-Allow-Methods: '''*'''
+              method.response.header.Access-Control-Allow-Origin: '''*'''
+            responseTemplates:
+              application/json: |
+                {}
+
+  /books/{id}:
+    get:
+      summary: Get book by id
+      operationId: getBook
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: Id of the book
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        404:
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: INTERNAL_SERVER_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        uri: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:book-find-by-id-lambda/invocations'
+        httpMethod: POST #must be post
+        type: aws_proxy
+      x-amazon-apigateway-request-validator: 'params-only'
+    delete:
+      summary: Delete book by id
+      operationId: deleteBook
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: Id of the book
+      responses:
+        204:
+          description: NO CONTENT
+        500:
+          description: INTERNAL_SERVER_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        uri: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:book-delete-lambda/invocations'
+        httpMethod: POST #must be post
+        type: aws_proxy
+      x-amazon-apigateway-request-validator: 'params-only'
+    put:
+      summary: Update book by id
+      operationId: updateBook
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: Id of the book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaseBook'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        404:
+          description: NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: INTERNAL_SERVER_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        uri: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:book-update-lambda/invocations'
+        httpMethod: POST #must be post
+        type: aws_proxy
+      x-amazon-apigateway-request-validator: 'all'
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      tags:
+      - CORS
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content: {}
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+              method.response.header.Access-Control-Allow-Methods: '''*'''
+              method.response.header.Access-Control-Allow-Origin: '''*'''
+            responseTemplates:
+              application/json: |
+                {}
+
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+  params-only:
+    validateRequestBody: false
+    validateRequestParameters: true

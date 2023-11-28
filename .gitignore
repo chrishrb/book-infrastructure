@@ -1,0 +1,9 @@
+# Ignore IDE
+.idea/
+*.iml
+
+# ignore terragrunt cache
+.terragrunt-cache/
+
+# ignore credential files
+aws_creds.env
