@@ -1,4 +1,4 @@
-# Infrastructure for book application
+# book-infrastructure
 
 Infrastructure for the bachelor thesis book application by Christoph Herb.
 
